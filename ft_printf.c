@@ -1,4 +1,4 @@
-#include "ft_printf_lib.h"
+#include "ft_printf.h"
 
 void    ft_init(t_format *var)
 {
@@ -24,49 +24,37 @@ int     ft_trckr(t_format *var)
     else if (var->type == 'p')
         prnt_point(&(*var));
     else if (var->type == 'u')
-        prnt_unint(&(*var));/*
+        prnt_unint(&(*var));
     else if (var->type == 'x')
-        prnt_esa(&(*var));
+        prnt_esa(&(*var), 0);
     else if (var->type == 'X')
-        prnt_esamausic(&(*var)); */ 
+        prnt_esa(&(*var), 1); 
 	return (0);
 }
 
-int     ft_fll(const char *s,int i, t_format *var)
+int     ft_fll(const char *s, int i, t_format *var)
 {
     char    buffer[100000];
-    int     j;
     
     var->i_start = i;
-    if (is_a_flag(s, i, &(*var)))
-	{
-		var->flag = s[i];
-		i++;
-	}
-    if (!is_a_flag(s, i, &(*var)) && s[i] >= '0' && s[i] <= '1')
-    {
-        if (s[i] == '*')
+    if (is_a_flag(s, i, &(*var)) && var->flag != '-')
+		var->flag = s[i++];
+    if (s[i] == '*')
         var->star_width = 1;
-        else
-        {
-            j = 0;
-            buffer[0] = 0;
-            while(s[i] <= '9' && s[i] >= '0')
-                buffer[j++] = s[i++];
-            buffer[j] = 0;
-            if(buffer[0])
-                var->width = ft_atoi(buffer); 
-        }   
-    }
+    else if (!is_a_flag(s, i, &(*var)) && (s[i] >= '0' && s[i] <= '9'))
+        i = ft_counter(s, i, buffer, &(*var), var->prcsn);
+    if(!is_a_flag(s, i, &(*var) ) && s[i] == '.')
+        i = ft_counter(s, ++i, buffer, &(*var), (var->prcsn = 0));
     if (!is_a_flag(s, i, &(*var)) && is_a_type(s[i]))
         var->type = s[i];
+    if(s[i] == '%' && !(var->type))
+        ft_pprint(&(*var));
     ft_trckr(var);
     return (i + 1);
 }
 
 int     ft_scroll(const char *s, t_format *var)
 {
-    char *str;
     int len;
     int i;
     int stampe;
@@ -74,11 +62,14 @@ int     ft_scroll(const char *s, t_format *var)
     i=0;
     stampe = 0;
     len = ft_strlen(s);
-    ft_init(&*var);
     while (s[i])
     {
+        ft_init(&*var);
         if (s[i] == '%' && s[i + 1] != '%')
+        {
            i = ft_fll(s,i+1, &(*var));
+           continue;
+        }
         if (s[i] == '%' && s[i + 1] == '%')
             i++;
         if (i < len)
@@ -103,17 +94,23 @@ int     ft_printf(const char *s, ...)
     return(var.totale + stampe);
 }
 
-int     main()
+ /* int     main()
 {
 	unsigned int s = 4294967294;
     int inter = 398734;
     int ninter = -391734345;
+    unsigned char h = 0x64;
+    char c = 'r'; 
+    int h2 = 0xFAFA;
     int n;
     int m;
     char *p = "bella frah";
-    
 
-    m = ft_printf("MIA:      %s\n", p);
-    n = printf("ORIGINAL: %s\n", p);
-    printf("mia:      %d\nprintf:   %d\n",m,n);
-}
+    printf("\n---------------\n");
+    m = ft_printf("MINE    :%7.5s", "bombastic");
+    printf("\n---------------\n");
+    n = printf("Original:%7.5s", "bombastic");
+    printf("\n---------------\n");printf("\n---------------\n");
+    printf("\nmia     :      %d\nprintf  :   %d\n", m, n);
+ }  */
+ 

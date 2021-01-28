@@ -1,4 +1,4 @@
-#include "ft_printf_lib.h"
+#include "ft_printf.h"
 
 int				ft_strlen(const char *str)
 {
@@ -26,9 +26,25 @@ char			*ft_strcpy(char *dest, char *src)
 	return (dest);
 }
 
+int				ft_counter(const char *s, int i, char buffer[100000], t_format *var, int precision)
+{
+	int j;
+
+	j = 0;
+    buffer[0] = 0;
+    while(s[i] <= '9' && s[i] >= '0')
+        buffer[j++] = s[i++];
+    buffer[j] = 0;
+    if(buffer[0] && precision == -1)
+        var->width = ft_atoi(buffer);
+	else if(buffer[0] && !precision)
+        var->prcsn = ft_atoi(buffer);
+	return (i);
+}
+
 int 			is_a_flag(const char *s, int i, t_format *var)
 {
-	if ((s[i] == '0' || s[i] == '-') && (i == (var->i_start + 1)))
+	if ((s[i] == '0' || s[i] == '-') && (i == var->i_start))
 		return (1);
 	return (0);
 }
@@ -148,14 +164,6 @@ static void		ft_conv(char *a, int n, int len)
 	}
 }
 
-void 			ft_putc(t_format *var)
-{
-	char c;
-
-	c = va_arg(var->arg_lst, int);
-	write(1, &c, 1);
-}
-
 char			*ft_itoa(int n)
 {
 	char	*a;
@@ -188,55 +196,196 @@ char 			*str_reverse(char *c, int len)
 	return (c);
 }
 
-void 			ft_base_conv(unsigned int orig, char *addr)
+void 			ft_base_conv(unsigned int orig, char *addr, int maiusc, int radice)
 {
 	char *list;
-	char buffer[50];
-	int i = 0;
+	int i;
 	char *dest;
 
 	i = 0;
-	list = EXA_MAX;
+	if(maiusc)
+		list = EXA_MAX;
+	else
+		list = EXA_MIN;
 	dest = addr;
 	while(orig != 0)
 	{
 		dest[i++] = list[orig % 16];
 		orig /= 16;
 	}
-	dest[i++] = '0';
-	dest[i++] = '1';
-	dest[i++] = 'x';
-	dest[i++] = '0';
+	if (radice)
+	{
+		dest[i++] = '0';
+		dest[i++] = '1';
+		dest[i++] = 'x';
+		dest[i++] = '0';
+	}	
 	dest[i] = 0;
 	dest = str_reverse(dest, i);
+	
+}
+
+void			space_printer(int n, char zero)
+{
+	int i;
+
+	i = 0;
+	if(zero != '0')
+		while (i++ < n)
+			write(1," ", 1);
+	else
+		while (i++ < n)
+			write(1,"0", 1);
+}
+
+void			ft_pprint(t_format *var)
+{
+	if ((var->width - 1 ) > 0)
+	{
+		var->totale += var->width;
+		if(var->flag != '-')
+		{
+			space_printer((var->width) - 1, var->flag);
+			write(1, "%", 1);;
+		}
+		else if(var->flag)
+		{
+			write(1, "%", 1);;
+			space_printer((var->width) - 1, var->flag);
+		}
+	}
+	else
+	{
+		var->totale += 1;
+		write(1, "%", 1);
+	}		
+}
+
+void 			strprint(char *c,int len)
+{
+	int i;
+
+	i = 0;
+	if (len == -1)
+		len = ft_strlen(c);
+	while (c[i] && i < len)
+		write(1, &c[i++], 1);
+}
+
+void 			ft_putc(t_format *var)
+{
+	char c;
+
+	c = va_arg(var->arg_lst, int);
+	//if(var->prcsn != 0)
+		//write(1, &c, 1);
+	if ((var->width - 1 ) > 0)
+	{
+		var->totale += var->width;
+		if(!var->flag)
+		{
+			space_printer((var->width) - 1, var->flag);
+			write(1, &c, 1);
+		}
+		else if(var->flag == '-')
+		{
+			write(1, &c, 1);
+			space_printer((var->width) - 1, var->flag);
+		}
+	}
+	else
+	{
+		var->totale += 1;
+		write(1, &c, 1);
+	}	
 }
 
 void 			ft_print_str(t_format *var)
 {
 	char *s;
+	int len;
 
 	s = va_arg(var->arg_lst, char *);
-	var->totale = ft_strlen(s);
-	while(*s)
-		write(1,&(*s++),1);
-}
-
-void 			strprint(char *c)
-{
-	while(*c)
-		write(1,&(*c++),1);
+	len = ft_strlen(s);
+	if (var->prcsn != -1 && var->prcsn < len)
+		len = var->prcsn;
+	if ((var->width - len ) > 0)
+	{
+		var->totale += var->width;
+		if(var->flag != '-')
+		{
+			space_printer((var->width) - len, var->flag);
+			strprint(s, var->prcsn);
+		}
+		else if(var->flag == '-')
+		{
+			strprint(s, var->prcsn);
+			space_printer((var->width) - len, var->flag);
+		}
+	}
+	else
+	{
+		var->totale += len;
+		
+		strprint(s, var->prcsn);
+	}	
 }
 
 void 			prnt_int(t_format *var)
 {
 	char *s;
 	int n;
+	int len;
+
 	n = va_arg(var->arg_lst, int);
 	s = ft_itoa(n);
-	var->totale = ft_strlen(s);
-	while(*s)
-		write(1,&(*s++),1);
+	len = ft_strlen(s);
+	if ((var->width - len ) > 0)
+	{
+		var->totale += var->width;
+		if(var->flag != '-')
+		{
+			space_printer((var->width) - len, var->flag);
+			strprint(s, -1);
+		}
+		else if(var->flag == '-')
+		{
+			strprint(s, -1);
+			space_printer((var->width) - ft_strlen(s), var->flag);
+		}
+	}
+	else
+	{
+		strprint(s, len);
+		var->totale = var->totale + len;
+	}
+	free(s);
 }	
+
+void			prnt_esa(t_format *var, int maiusc)
+{
+	unsigned int s;
+	char p[10000];
+	
+	s = va_arg(var->arg_lst, unsigned int);
+	ft_base_conv(s, p, maiusc, 0);
+	var->totale += ft_strlen(p);
+	if ((var->width - ft_strlen(p) ) > 0)
+	{
+		var->totale = var->width;
+		if(!var->flag)
+		{
+			space_printer((var->width) - ft_strlen(p), var->flag);
+			strprint(p, var->prcsn);
+		}
+		else if(var->flag == '-')
+		{
+			strprint(p, var->prcsn);
+			space_printer((var->width) - ft_strlen(p), var->flag);
+		}
+		
+	}
+}
 
 void 			prnt_unint(t_format *var)
 {
@@ -245,18 +394,47 @@ void 			prnt_unint(t_format *var)
 	n = va_arg(var->arg_lst, unsigned int);
 	s = ft_uns_itoa(n);
 	var->totale = ft_strlen(s);
-	while(*s)
-		write(1,&(*s++),1);
+	if ((var->width - ft_strlen(s) ) > 0)
+	{
+		var->totale = var->width;
+		if(!var->flag)
+		{
+			space_printer((var->width) - ft_strlen(s), var->flag);
+			strprint(s, var->prcsn);
+		}
+		else if(var->flag == '-')
+		{
+			strprint(s, var->prcsn);
+			space_printer((var->width) - ft_strlen(s), var->flag);
+		}
+	}
+	else 
+		strprint(s, var->prcsn);
+	free(s);
 }
 
 void 			prnt_point(t_format *var)
 {
-	size_t s;
-	char waitingroom[1000];
+	size_t hex;
+	char s[10000];
 
-	s = va_arg(var->arg_lst, size_t);
-	ft_base_conv(s,waitingroom);
-	var->totale += ft_strlen(waitingroom);
-	printf("||%d||",var->totale);
-	strprint(waitingroom);
+	hex = va_arg(var->arg_lst, size_t);
+	ft_base_conv(hex, s, 0, 1);
+	var->totale += ft_strlen(s);
+	if ((var->width - ft_strlen(s) ) > 0)
+	{
+		var->totale = var->width;
+		if(!var->flag)
+		{
+			space_printer((var->width) - ft_strlen(s), var->flag);
+			strprint(s, var->prcsn);
+		}
+		else if(var->flag == '-')
+		{
+			strprint(s, var->prcsn);
+			space_printer((var->width) - ft_strlen(s), var->flag);
+		}
+	}
+	else 
+		strprint(s, var->prcsn);
 }

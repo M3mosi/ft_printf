@@ -1,4 +1,4 @@
-#include "ft_printf_lib.h"
+#include "ft_printf.h"
 
 static int  ft_is_uns_digit(unsigned int c)
 {
@@ -9,8 +9,7 @@ static int  getlen(unsigned int n)
 {
     int i;
     i = 1;
-    if (n < 0)
-        n *= -1;
+
     while (i < 10)
     {
         if (ft_is_uns_digit(n + 48))
@@ -34,9 +33,8 @@ char        *ft_uns_itoa(unsigned int n)
 {
     char    *a;
     int     len;
+    
     len = getlen(n);
-    if (n < 0)
-        len++;
     if (!(a = (char *)malloc(len + 1 * sizeof(char))))
         return (NULL);
     a[len] = '\0';
