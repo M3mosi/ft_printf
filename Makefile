@@ -1,14 +1,26 @@
-NAME = libftprintf.a
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: sgiovo <marvin@42.fr>                      +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2021/01/30 18:29:42 by sgiovo            #+#    #+#              #
+#    Updated: 2021/01/30 18:29:45 by sgiovo           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+NAME	= libftprintf.a
 
 CC		= gcc
 
 CFLAGS	= -Wall -Werror -Wextra
 
-LIBRI = ft_printf.h
+LIBRI	= ft_printf.h
 
-SRCS =  ft_printf.c ft_uns_itoa.c ft_printf_utils.c 
+SRCS	=  ft_printf.c ft_uns_itoa.c ft_printf_utils.c ft_printf_utils_b.c 	ft_printf_utils_c.c ft_printf_utils_d.c ft_printf_utils_e.c ft_printf_utils_f.c ft_printf_utils_g.c
 
-OBJS = ${SRCS:.c=.o}
+OBJS	= ${SRCS:.c=.o}
 
 RM		= rm -f
 
@@ -21,7 +33,7 @@ $(NAME): ${OBJS}
 all:	${NAME}
 
 clean:
-		${RM} ${OBJS}
+		${RM} ${OBJS} *.gch
 
 fclean:	clean
 		${RM} ${NAME}
